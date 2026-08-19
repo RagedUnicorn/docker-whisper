@@ -1,0 +1,44 @@
+# Docker Compose configuration for development
+#
+# This file is used for building and testing the whisper image locally
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml build
+#   docker compose -f docker-compose.dev.yml run --rm whisper-dev
+#
+# This will drop you into a shell where you can manually run
+# whisper-ctranslate2 commands. The build targets the cpu stage; use
+# `docker buildx build --target cuda` for the CUDA variant.
+
+services:
+  whisper-dev:
+    build:
+      context: .
+      target: cpu
+    image: ragedunicorn/whisper:dev
+    volumes:
+      - ./media:/tmp/workdir
+      - whisper-models:/home/whisper/.cache/huggingface
+    working_dir: /tmp/workdir
+    stdin_open: true
+    tty: true
+    # Override entrypoint to get a shell (Debian base ships bash)
+    entrypoint: /bin/bash
+    labels:
+      org.opencontainers.image.title: "whisper-ctranslate2 on Python slim (Dev)"
+      org.opencontainers.image.description: "whisper development environment for testing and debugging"
+      org.opencontainers.image.vendor: "ragedunicorn"
+    environment:
+      - TERM=xterm-256color
+      - PS1=\[\033[1;36m\]whisper-dev\[\033[0m\]:\w\$
+    # Resource limits for development (optional)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '4'
+    #       memory: 4G
+
+volumes:
+  # Shared model cache - same volume as docker-compose.yml
+  whisper-models:
+    name: whisper-models

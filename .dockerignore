@@ -1,0 +1,27 @@
+# Git and documentation
+.git
+*.md
+LICENSE*
+
+# CI/CD
+.github/
+
+# Development
+.env
+.vscode/
+.idea/
+
+# Test files
+test/
+docker-compose*.yml
+
+# Media files
+media/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.log
+*.tmp

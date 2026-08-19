@@ -1,0 +1,151 @@
+# Docker Compose configuration for running Container Structure Tests
+#
+# Usage:
+#   docker compose -f docker-compose.test.yml run --rm test-all
+#   docker compose -f docker-compose.test.yml run --rm test-all-cpu
+#   docker compose -f docker-compose.test.yml run --rm test-all-cuda
+#
+# This will validate the whisper Docker images (cpu and cuda variants)
+# structure, commands, and metadata
+
+services:
+  # Test file existence and permissions (cpu)
+  container-test-cpu:
+    image: ragedunicorn/container-test:${CONTAINER_STRUCTURE_TEST_VERSION:-latest}
+    volumes:
+      - ./test/:/test:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: ["--image", "ragedunicorn/whisper:${WHISPER_VERSION:-test-cpu}", "--config", "/test/cpu_test.yml"]
+    labels:
+      org.opencontainers.image.title: "Container Structure Test - File Tests (CPU)"
+      org.opencontainers.image.description: "Validating whisper CPU file structure and permissions"
+      org.opencontainers.image.vendor: "ragedunicorn"
+
+  # Test command execution and whisper functionality (cpu)
+  container-test-command-cpu:
+    image: ragedunicorn/container-test:${CONTAINER_STRUCTURE_TEST_VERSION:-latest}
+    volumes:
+      - ./test/:/test:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: ["--image", "ragedunicorn/whisper:${WHISPER_VERSION:-test-cpu}", "--config", "/test/cpu_command_test.yml"]
+    labels:
+      org.opencontainers.image.title: "Container Structure Test - Command Tests (CPU)"
+      org.opencontainers.image.description: "Validating whisper CPU command execution and functionality"
+      org.opencontainers.image.vendor: "ragedunicorn"
+
+  # Test image metadata and labels (cpu)
+  container-test-metadata-cpu:
+    image: ragedunicorn/container-test:${CONTAINER_STRUCTURE_TEST_VERSION:-latest}
+    volumes:
+      - ./test/:/test:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: ["--image", "ragedunicorn/whisper:${WHISPER_VERSION:-test-cpu}", "--config", "/test/cpu_metadata_test.yml"]
+    labels:
+      org.opencontainers.image.title: "Container Structure Test - Metadata Tests (CPU)"
+      org.opencontainers.image.description: "Validating whisper CPU image metadata and OCI labels"
+      org.opencontainers.image.vendor: "ragedunicorn"
+
+  # Test file existence and permissions (cuda)
+  container-test-cuda:
+    image: ragedunicorn/container-test:${CONTAINER_STRUCTURE_TEST_VERSION:-latest}
+    volumes:
+      - ./test/:/test:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: ["--image", "ragedunicorn/whisper:${WHISPER_CUDA_VERSION:-test-cuda}", "--config", "/test/cuda_test.yml"]
+    labels:
+      org.opencontainers.image.title: "Container Structure Test - File Tests (CUDA)"
+      org.opencontainers.image.description: "Validating whisper CUDA file structure and permissions"
+      org.opencontainers.image.vendor: "ragedunicorn"
+
+  # Test command execution and whisper functionality (cuda)
+  container-test-command-cuda:
+    image: ragedunicorn/container-test:${CONTAINER_STRUCTURE_TEST_VERSION:-latest}
+    volumes:
+      - ./test/:/test:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: ["--image", "ragedunicorn/whisper:${WHISPER_CUDA_VERSION:-test-cuda}", "--config", "/test/cuda_command_test.yml"]
+    labels:
+      org.opencontainers.image.title: "Container Structure Test - Command Tests (CUDA)"
+      org.opencontainers.image.description: "Validating whisper CUDA command execution and functionality"
+      org.opencontainers.image.vendor: "ragedunicorn"
+
+  # Test image metadata and labels (cuda)
+  container-test-metadata-cuda:
+    image: ragedunicorn/container-test:${CONTAINER_STRUCTURE_TEST_VERSION:-latest}
+    volumes:
+      - ./test/:/test:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: ["--image", "ragedunicorn/whisper:${WHISPER_CUDA_VERSION:-test-cuda}", "--config", "/test/cuda_metadata_test.yml"]
+    labels:
+      org.opencontainers.image.title: "Container Structure Test - Metadata Tests (CUDA)"
+      org.opencontainers.image.description: "Validating whisper CUDA image metadata and OCI labels"
+      org.opencontainers.image.vendor: "ragedunicorn"
+
+  # Run all cpu tests sequentially
+  test-all-cpu:
+    image: ragedunicorn/container-test:${CONTAINER_STRUCTURE_TEST_VERSION:-latest}
+    volumes:
+      - ./test/:/test:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: /bin/sh
+    command: >
+      -c "echo 'Running all Container Structure Tests for whisper (CPU)...' &&
+          container-structure-test test --image ragedunicorn/whisper:${WHISPER_VERSION:-test-cpu} --config /test/cpu_test.yml &&
+          echo '✓ CPU file structure tests passed' &&
+          container-structure-test test --image ragedunicorn/whisper:${WHISPER_VERSION:-test-cpu} --config /test/cpu_command_test.yml &&
+          echo '✓ CPU command execution tests passed' &&
+          container-structure-test test --image ragedunicorn/whisper:${WHISPER_VERSION:-test-cpu} --config /test/cpu_metadata_test.yml &&
+          echo '✓ CPU metadata validation tests passed' &&
+          echo && echo '✅ All whisper CPU container tests completed successfully!'"
+    labels:
+      org.opencontainers.image.title: "Container Structure Test - All CPU Tests"
+      org.opencontainers.image.description: "Running all validation tests for the whisper CPU image"
+      org.opencontainers.image.vendor: "ragedunicorn"
+
+  # Run all cuda tests sequentially
+  test-all-cuda:
+    image: ragedunicorn/container-test:${CONTAINER_STRUCTURE_TEST_VERSION:-latest}
+    volumes:
+      - ./test/:/test:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: /bin/sh
+    command: >
+      -c "echo 'Running all Container Structure Tests for whisper (CUDA)...' &&
+          container-structure-test test --image ragedunicorn/whisper:${WHISPER_CUDA_VERSION:-test-cuda} --config /test/cuda_test.yml &&
+          echo '✓ CUDA file structure tests passed' &&
+          container-structure-test test --image ragedunicorn/whisper:${WHISPER_CUDA_VERSION:-test-cuda} --config /test/cuda_command_test.yml &&
+          echo '✓ CUDA command execution tests passed' &&
+          container-structure-test test --image ragedunicorn/whisper:${WHISPER_CUDA_VERSION:-test-cuda} --config /test/cuda_metadata_test.yml &&
+          echo '✓ CUDA metadata validation tests passed' &&
+          echo && echo '✅ All whisper CUDA container tests completed successfully!'"
+    labels:
+      org.opencontainers.image.title: "Container Structure Test - All CUDA Tests"
+      org.opencontainers.image.description: "Running all validation tests for the whisper CUDA image"
+      org.opencontainers.image.vendor: "ragedunicorn"
+
+  # Run all tests for both variants sequentially
+  test-all:
+    image: ragedunicorn/container-test:${CONTAINER_STRUCTURE_TEST_VERSION:-latest}
+    volumes:
+      - ./test/:/test:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: /bin/sh
+    command: >
+      -c "echo 'Running all Container Structure Tests for whisper (CPU + CUDA)...' &&
+          container-structure-test test --image ragedunicorn/whisper:${WHISPER_VERSION:-test-cpu} --config /test/cpu_test.yml &&
+          echo '✓ CPU file structure tests passed' &&
+          container-structure-test test --image ragedunicorn/whisper:${WHISPER_VERSION:-test-cpu} --config /test/cpu_command_test.yml &&
+          echo '✓ CPU command execution tests passed' &&
+          container-structure-test test --image ragedunicorn/whisper:${WHISPER_VERSION:-test-cpu} --config /test/cpu_metadata_test.yml &&
+          echo '✓ CPU metadata validation tests passed' &&
+          container-structure-test test --image ragedunicorn/whisper:${WHISPER_CUDA_VERSION:-test-cuda} --config /test/cuda_test.yml &&
+          echo '✓ CUDA file structure tests passed' &&
+          container-structure-test test --image ragedunicorn/whisper:${WHISPER_CUDA_VERSION:-test-cuda} --config /test/cuda_command_test.yml &&
+          echo '✓ CUDA command execution tests passed' &&
+          container-structure-test test --image ragedunicorn/whisper:${WHISPER_CUDA_VERSION:-test-cuda} --config /test/cuda_metadata_test.yml &&
+          echo '✓ CUDA metadata validation tests passed' &&
+          echo && echo '✅ All whisper container tests completed successfully!'"
+    labels:
+      org.opencontainers.image.title: "Container Structure Test - All Tests"
+      org.opencontainers.image.description: "Running all validation tests for both whisper image variants"
+      org.opencontainers.image.vendor: "ragedunicorn"

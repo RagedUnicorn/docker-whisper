@@ -1,0 +1,50 @@
+# Docker Compose configuration for translation tasks
+#
+# Whisper can translate speech from any supported language into English
+# while transcribing (--task translate).
+#
+# Usage examples:
+#   docker compose -f examples/docker-compose.translate.yml run --rm translate
+#   docker compose -f examples/docker-compose.translate.yml run --rm translate-srt
+#
+# Place a non-English recording at ./media/input/speech.wav
+# Output files will be saved to ./media/output/
+
+services:
+  # Base service configuration (inherited by other services)
+  whisper-base:
+    image: ragedunicorn/whisper:${WHISPER_VERSION:-latest}
+    volumes:
+      - ../media:/tmp/workdir
+      - whisper-models:/home/whisper/.cache/huggingface
+    working_dir: /tmp/workdir
+    stdin_open: true
+    tty: true
+
+  # Translate a non-English recording to English text
+  translate:
+    extends:
+      service: whisper-base
+    command: >
+      input/speech.wav
+      --task translate
+      --model small
+      --output_format txt
+      --output_dir output
+
+  # Translate to English SRT subtitles
+  translate-srt:
+    extends:
+      service: whisper-base
+    command: >
+      input/speech.wav
+      --task translate
+      --model small
+      --output_format srt
+      --output_dir output
+
+volumes:
+  # Same named volume as the root compose file - models downloaded once are
+  # reused by every example
+  whisper-models:
+    name: whisper-models

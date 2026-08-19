@@ -1,0 +1,37 @@
+schemaVersion: 2.0.0
+
+fileExistenceTests:
+  - name: 'whisper-ctranslate2 entry point exists'
+    path: '/usr/local/bin/whisper-ctranslate2'
+    shouldExist: true
+    permissions: '-rwxr-xr-x'
+
+  # The official python image maintains python as a symlink to python3.
+  # Existence only - no permission assertion, so the symlink passes.
+  - name: 'Python interpreter exists'
+    path: '/usr/local/bin/python'
+    shouldExist: true
+
+  # Pre-created by the image with whisper ownership so a named volume
+  # mounted here for the model cache is initialized owned by the whisper
+  # user instead of root
+  - name: 'Model cache directory exists and is owned by whisper'
+    path: '/home/whisper/.cache/huggingface'
+    shouldExist: true
+    uid: 1000
+    gid: 1000
+
+  - name: 'Working directory exists'
+    path: '/tmp/workdir'
+    shouldExist: true
+    isExecutableBy: 'any'
+
+  # The CPU image must not ship the NVIDIA GPU libraries (cuda variant only)
+  - name: 'NVIDIA libraries absent'
+    path: '/usr/local/lib/python3.12/site-packages/nvidia'
+    shouldExist: false
+
+fileContentTests:
+  - name: 'CA certificates installed'
+    path: '/etc/ssl/certs/ca-certificates.crt'
+    expectedContents: ['-----BEGIN CERTIFICATE-----']

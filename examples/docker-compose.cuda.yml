@@ -1,0 +1,51 @@
+# Docker Compose configuration for GPU-accelerated transcription
+#
+# Requires an NVIDIA GPU (driver with CUDA 12 support) and GPU-enabled
+# Docker (Docker Desktop WSL2 backend or the NVIDIA Container Toolkit).
+#
+# Usage examples:
+#   docker compose -f examples/docker-compose.cuda.yml run --rm cuda-transcribe
+#   docker compose -f examples/docker-compose.cuda.yml run --rm cuda-transcribe-large
+#
+# Place your input files in ./media/input/
+# Output files will be saved to ./media/output/
+
+services:
+  # Base service configuration (inherited by other services)
+  whisper-cuda-base:
+    image: ragedunicorn/whisper:${WHISPER_CUDA_VERSION:-latest-cuda}
+    # Pass all host GPUs through to the container
+    gpus: all
+    volumes:
+      - ../media:/tmp/workdir
+      - whisper-models:/home/whisper/.cache/huggingface
+    working_dir: /tmp/workdir
+    stdin_open: true
+    tty: true
+
+  # Transcribe the bundled JFK sample on the GPU
+  cuda-transcribe:
+    extends:
+      service: whisper-cuda-base
+    command: >
+      input/jfk.wav
+      --model small
+      --device cuda
+      --output_dir output
+
+  # Transcribe a video file with the highest-quality model - on a GPU,
+  # large-v3 is the recommended default
+  cuda-transcribe-large:
+    extends:
+      service: whisper-cuda-base
+    command: >
+      input/video.mp4
+      --model large-v3
+      --device cuda
+      --output_dir output
+
+volumes:
+  # Same named volume as the root compose file - models downloaded once are
+  # reused by every example
+  whisper-models:
+    name: whisper-models

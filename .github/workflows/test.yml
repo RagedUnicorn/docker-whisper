@@ -1,0 +1,165 @@
+name: Test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [cpu, cuda]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Build whisper image (${{ matrix.variant }})
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: ${{ matrix.variant }}
+          # Container Structure Tests inspect the image via the Docker daemon,
+          # which can only read a single-platform image. load:true loads one
+          # platform into the daemon; provenance:false keeps BuildKit from
+          # wrapping it in an attestation manifest (an OCI index), which would
+          # make the tests fail with "no such image".
+          load: true
+          provenance: false
+          platforms: linux/amd64
+          tags: ragedunicorn/whisper:test-${{ matrix.variant }}
+          # Per-variant cache scope: both matrix legs writing the default
+          # scope would evict each other's snapshot.
+          cache-from: type=gha,scope=${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
+          build-args: |
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+            VERSION=test
+      - name: Pull Container Structure Test image
+        run: docker pull ragedunicorn/container-test:latest
+      - name: Run File Structure Tests
+        id: file-tests
+        continue-on-error: true
+        shell: bash
+        env:
+          WHISPER_VERSION: test-cpu
+          WHISPER_CUDA_VERSION: test-cuda
+        run: |
+          echo "::group::📁 File Structure Tests (${{ matrix.variant }})"
+          docker compose -f docker-compose.test.yml up --exit-code-from container-test-${{ matrix.variant }} container-test-${{ matrix.variant }} 2>&1 | tee test-file-structure.log
+          echo "::endgroup::"
+      - name: Run Command Execution Tests
+        id: command-tests
+        continue-on-error: true
+        shell: bash
+        env:
+          WHISPER_VERSION: test-cpu
+          WHISPER_CUDA_VERSION: test-cuda
+        run: |
+          echo "::group::🔧 Command Execution Tests (${{ matrix.variant }})"
+          docker compose -f docker-compose.test.yml up --exit-code-from container-test-command-${{ matrix.variant }} container-test-command-${{ matrix.variant }} 2>&1 | tee test-command-execution.log
+          echo "::endgroup::"
+      - name: Run Metadata Tests
+        id: metadata-tests
+        continue-on-error: true
+        shell: bash
+        env:
+          WHISPER_VERSION: test-cpu
+          WHISPER_CUDA_VERSION: test-cuda
+        run: |
+          echo "::group::🏷️ Metadata Tests (${{ matrix.variant }})"
+          docker compose -f docker-compose.test.yml up --exit-code-from container-test-metadata-${{ matrix.variant }} container-test-metadata-${{ matrix.variant }} 2>&1 | tee test-metadata.log
+          echo "::endgroup::"
+      - name: Test basic whisper functionality
+        id: basic-tests
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "::group::🎙️ Basic Whisper Functionality Test (${{ matrix.variant }})"
+          {
+            echo "Testing whisper-ctranslate2 version..."
+            docker run --rm ragedunicorn/whisper:test-${{ matrix.variant }} --version
+            echo ""
+            if [ "${{ matrix.variant }}" = "cpu" ]; then
+              # Transcribes the bundled JFK sample with the tiny model. The
+              # model (~75 MB) is downloaded from Hugging Face on every run;
+              # output is written inside the container to avoid bind-mount
+              # ownership issues on the runner.
+              echo "Testing transcription of media/input/jfk.wav..."
+              docker run --rm \
+                -v "$(pwd)/media/input:/tmp/workdir/input:ro" \
+                --entrypoint sh ragedunicorn/whisper:test-cpu \
+                -c "whisper-ctranslate2 input/jfk.wav --model tiny --device cpu --output_format txt --output_dir /tmp/workdir/output && cat /tmp/workdir/output/jfk.txt" \
+                | tee transcript.txt
+              grep -qi "country" transcript.txt
+              echo "Transcript contains expected text"
+            else
+              # No GPU on hosted runners: verify the CUDA stack is importable
+              # and the libraries are physically present (device selection
+              # only happens at transcription time).
+              echo "Verifying CUDA libraries are present..."
+              docker run --rm --entrypoint python ragedunicorn/whisper:test-cuda \
+                -c "import nvidia.cublas, nvidia.cudnn, ctranslate2; print('ctranslate2', ctranslate2.__version__)"
+            fi
+          } 2>&1 | tee test-basic-functionality.log
+          echo "::endgroup::"
+      - name: Generate Test Summary
+        if: always()
+        run: |
+          echo "## 📊 Test Results Summary (${{ matrix.variant }})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.file-tests.outcome }}" == "success" ]; then
+            echo "| 📁 File Structure | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| 📁 File Structure | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ steps.command-tests.outcome }}" == "success" ]; then
+            echo "| 🔧 Command Execution | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| 🔧 Command Execution | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ steps.metadata-tests.outcome }}" == "success" ]; then
+            echo "| 🏷️ Metadata | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| 🏷️ Metadata | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ steps.basic-tests.outcome }}" == "success" ]; then
+            echo "| 🎙️ Basic Functionality | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| 🎙️ Basic Functionality | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Overall status
+          if [ "${{ steps.file-tests.outcome }}" == "success" ] && \
+             [ "${{ steps.command-tests.outcome }}" == "success" ] && \
+             [ "${{ steps.metadata-tests.outcome }}" == "success" ] && \
+             [ "${{ steps.basic-tests.outcome }}" == "success" ]; then
+            echo "### ✅ All tests passed successfully!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Some tests failed. Check the logs for details." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+      - name: Upload test logs
+        if: always() && (steps.file-tests.outcome == 'failure' || steps.command-tests.outcome == 'failure' || steps.metadata-tests.outcome == 'failure' || steps.basic-tests.outcome == 'failure')
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-logs-${{ matrix.variant }}
+          path: |
+            test-file-structure.log
+            test-command-execution.log
+            test-metadata.log
+            test-basic-functionality.log
+          retention-days: 7

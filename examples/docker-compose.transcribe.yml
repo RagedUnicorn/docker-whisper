@@ -1,0 +1,55 @@
+# Docker Compose configuration for common transcription tasks
+#
+# Usage examples:
+#   docker compose -f examples/docker-compose.transcribe.yml run --rm transcribe-txt
+#   docker compose -f examples/docker-compose.transcribe.yml run --rm transcribe-srt
+#   docker compose -f examples/docker-compose.transcribe.yml run --rm transcribe-all
+#
+# Place your input files in ./media/input/
+# Output files will be saved to ./media/output/
+
+services:
+  # Base service configuration (inherited by other services)
+  whisper-base:
+    image: ragedunicorn/whisper:${WHISPER_VERSION:-latest}
+    volumes:
+      - ../media:/tmp/workdir
+      - whisper-models:/home/whisper/.cache/huggingface
+    working_dir: /tmp/workdir
+    stdin_open: true
+    tty: true
+
+  # Transcribe the bundled JFK sample to plain text (works out of the box)
+  transcribe-txt:
+    extends:
+      service: whisper-base
+    command: >
+      input/jfk.wav
+      --model tiny
+      --output_format txt
+      --output_dir output
+
+  # Generate SRT subtitles from an audio or video file
+  transcribe-srt:
+    extends:
+      service: whisper-base
+    command: >
+      input/jfk.wav
+      --model small
+      --output_format srt
+      --output_dir output
+
+  # Write every output format at once (txt, vtt, srt, tsv, json)
+  transcribe-all:
+    extends:
+      service: whisper-base
+    command: >
+      input/jfk.wav
+      --model small
+      --output_dir output
+
+volumes:
+  # Same named volume as the root compose file - models downloaded once are
+  # reused by every example
+  whisper-models:
+    name: whisper-models

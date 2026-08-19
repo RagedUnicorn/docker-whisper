@@ -1,0 +1,52 @@
+schemaVersion: 2.0.0
+
+commandTests:
+  - name: 'whisper-ctranslate2 version check'
+    command: 'whisper-ctranslate2'
+    args: ['--version']
+    expectedOutput:
+      - 'whisper-ctranslate2 0.5'
+    exitCode: 0
+
+  - name: 'whisper-ctranslate2 help output'
+    command: 'whisper-ctranslate2'
+    args: ['--help']
+    expectedOutput:
+      - 'usage'
+    exitCode: 0
+
+  # Proves the whole inference stack imports on a machine without GPU
+  # libraries - device selection only happens at transcription time
+  - name: 'faster-whisper and CTranslate2 import'
+    command: 'python'
+    args: ['-c', 'import faster_whisper, ctranslate2; print(ctranslate2.__version__)']
+    exitCode: 0
+
+  # Model downloads land in the pre-created cache via HF_HOME
+  - name: 'Hugging Face cache environment configured'
+    command: 'sh'
+    args: ['-c', 'echo "$HF_HOME"']
+    expectedOutput:
+      - '/home/whisper/.cache/huggingface'
+    exitCode: 0
+
+  # Mirror of docker-java's "javac absent in JRE": the CPU image must not
+  # contain the NVIDIA GPU libraries
+  - name: 'NVIDIA libraries not importable'
+    command: 'python'
+    args: ['-c', 'import nvidia.cublas']
+    exitCode: 1
+
+  - name: 'Check working directory'
+    command: 'pwd'
+    args: []
+    expectedOutput: ['/tmp/workdir']
+    exitCode: 0
+
+  - name: 'Non-root user exists'
+    command: 'id'
+    args: ['whisper']
+    exitCode: 0
+    expectedOutput:
+      - 'uid='
+      - 'whisper'

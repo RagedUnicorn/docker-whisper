@@ -1,0 +1,61 @@
+schemaVersion: 2.0.0
+
+# All tests here are GPU-independent by design: CI runners have no GPU.
+# Device selection in faster-whisper only happens at transcription time,
+# so version, help, and import checks run cleanly without --gpus.
+commandTests:
+  - name: 'whisper-ctranslate2 version check'
+    command: 'whisper-ctranslate2'
+    args: ['--version']
+    expectedOutput:
+      - 'whisper-ctranslate2 0.5'
+    exitCode: 0
+
+  - name: 'whisper-ctranslate2 help output'
+    command: 'whisper-ctranslate2'
+    args: ['--help']
+    expectedOutput:
+      - 'usage'
+    exitCode: 0
+
+  - name: 'faster-whisper and CTranslate2 import'
+    command: 'python'
+    args: ['-c', 'import faster_whisper, ctranslate2; print(ctranslate2.__version__)']
+    exitCode: 0
+
+  - name: 'NVIDIA libraries importable'
+    command: 'python'
+    args: ['-c', 'import nvidia.cublas, nvidia.cudnn']
+    exitCode: 0
+
+  # CTranslate2 loads cuBLAS/cuDNN through the dynamic linker at
+  # transcription time - both wheel library directories must be on the path
+  - name: 'GPU library path configured'
+    command: 'sh'
+    args: ['-c', 'echo "$LD_LIBRARY_PATH"']
+    expectedOutput:
+      - 'nvidia/cublas/lib'
+      - 'nvidia/cudnn/lib'
+    exitCode: 0
+
+  # Model downloads land in the pre-created cache via HF_HOME
+  - name: 'Hugging Face cache environment configured'
+    command: 'sh'
+    args: ['-c', 'echo "$HF_HOME"']
+    expectedOutput:
+      - '/home/whisper/.cache/huggingface'
+    exitCode: 0
+
+  - name: 'Check working directory'
+    command: 'pwd'
+    args: []
+    expectedOutput: ['/tmp/workdir']
+    exitCode: 0
+
+  - name: 'Non-root user exists'
+    command: 'id'
+    args: ['whisper']
+    exitCode: 0
+    expectedOutput:
+      - 'uid='
+      - 'whisper'

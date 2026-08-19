@@ -1,0 +1,131 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [cpu, cuda]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Build test image (${{ matrix.variant }})
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: ${{ matrix.variant }}
+          # Single-platform, daemon-loaded, no attestation manifest so the
+          # Container Structure Tests can inspect the image (an OCI index would
+          # fail with "no such image"). See TEST.md troubleshooting.
+          load: true
+          provenance: false
+          platforms: linux/amd64
+          tags: ragedunicorn/whisper:test-${{ matrix.variant }}
+          cache-from: type=gha,scope=${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
+      - name: Run Container Structure Tests (${{ matrix.variant }})
+        env:
+          WHISPER_VERSION: test-cpu
+          WHISPER_CUDA_VERSION: test-cuda
+        run: |
+          echo "::notice title=🧪 Running Tests::Validating Docker image before release..."
+          docker pull ragedunicorn/container-test:latest
+
+          echo "::group::Running all Container Structure Tests (${{ matrix.variant }})"
+          docker compose -f docker-compose.test.yml run --rm test-all-${{ matrix.variant }}
+          echo "::endgroup::"
+
+          echo "::notice title=✅ Tests Passed::All Container Structure Tests completed successfully!"
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [cpu, cuda]
+        include:
+          # CTranslate2 publishes manylinux aarch64 wheels, so the cpu variant
+          # follows the family's amd64+arm64 standard. The aarch64 wheels are
+          # CPU-only builds, so the cuda variant is amd64-only.
+          - variant: cpu
+            platforms: linux/amd64,linux/arm64
+          - variant: cuda
+            platforms: linux/amd64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # docker/metadata-action cannot interleave the variant into the middle
+      # of the tag (0.5.7-cpu-1) and its generated labels would override the
+      # per-variant title/description baked into the Dockerfile stages, so
+      # the tags are computed directly instead.
+      - name: Compute release metadata
+        id: rel
+        shell: bash
+        run: |
+          RAW="${GITHUB_REF_NAME#v}"
+          if ! echo "$RAW" | grep -Eq '^[0-9][0-9.]*-[0-9]+$'; then
+            echo "Tag '${GITHUB_REF_NAME}' does not match v{whisper_ctranslate2_version}-{build}" >&2
+            exit 1
+          fi
+          WHISPER_VERSION="${RAW%-*}"
+          BUILD="${RAW##*-}"
+          VARIANT_TAG="${WHISPER_VERSION}-${{ matrix.variant }}-${BUILD}"
+          # ghcr requires a lowercase repository path
+          GHCR_IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          HUB_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/whisper"
+          if [ "${{ matrix.variant }}" = "cpu" ]; then
+            LATEST="latest"
+          else
+            LATEST="latest-cuda"
+          fi
+          {
+            echo "version=${VARIANT_TAG}"
+            echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo "tags<<EOF"
+            echo "${HUB_IMAGE}:${VARIANT_TAG}"
+            echo "${HUB_IMAGE}:${LATEST}"
+            echo "${GHCR_IMAGE}:${VARIANT_TAG}"
+            echo "${GHCR_IMAGE}:${LATEST}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+      - name: Build and push Docker image (${{ matrix.variant }})
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: ${{ matrix.variant }}
+          platforms: ${{ matrix.platforms }}
+          push: true
+          tags: ${{ steps.rel.outputs.tags }}
+          cache-from: type=gha,scope=${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
+          build-args: |
+            BUILD_DATE=${{ steps.rel.outputs.build_date }}
+            VERSION=${{ steps.rel.outputs.version }}

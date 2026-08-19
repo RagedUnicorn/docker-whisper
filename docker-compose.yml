@@ -1,0 +1,65 @@
+# Docker Compose configuration for the whisper image
+#
+# Usage:
+#   docker compose run --rm whisper [whisper-ctranslate2-options]
+#   docker compose run --rm whisper-cuda [whisper-ctranslate2-options]
+#
+# Examples:
+#   docker compose run --rm whisper input/jfk.wav --model tiny --output_dir output
+#   docker compose run --rm whisper-cuda input/video.mp4 --model large-v3 --device cuda --output_dir output
+#
+# The services mount ./media as the working directory, allowing you to:
+#   - Place input files in ./media/input/
+#   - Find output files in ./media/output/
+#
+# The whisper-cuda service requires an NVIDIA GPU (driver with CUDA 12
+# support) and GPU-enabled Docker (Docker Desktop WSL2 backend or the
+# NVIDIA Container Toolkit).
+#
+# The image versions are set in the .env file (default: latest/latest-cuda)
+# You can override them by:
+#   - Editing the .env file
+#   - Setting environment variables: WHISPER_VERSION=0.5.7-cpu-1 docker compose run --rm whisper [args]
+
+services:
+  whisper:
+    image: ragedunicorn/whisper:${WHISPER_VERSION:-latest}
+    volumes:
+      # Mount local media directory for input/output files
+      - ./media:/tmp/workdir
+      # Persist downloaded Whisper models across runs
+      - whisper-models:/home/whisper/.cache/huggingface
+    working_dir: /tmp/workdir
+    stdin_open: true
+    tty: true
+
+    # Environment variables (optional)
+    environment:
+      # Add any environment variables if needed
+      - TERM=xterm-256color
+
+  whisper-cuda:
+    image: ragedunicorn/whisper:${WHISPER_CUDA_VERSION:-latest-cuda}
+    # Pass all host GPUs through to the container
+    gpus: all
+    volumes:
+      # Mount local media directory for input/output files
+      - ./media:/tmp/workdir
+      # Persist downloaded Whisper models across runs
+      - whisper-models:/home/whisper/.cache/huggingface
+    working_dir: /tmp/workdir
+    stdin_open: true
+    tty: true
+
+    # Environment variables (optional)
+    environment:
+      # Add any environment variables if needed
+      - TERM=xterm-256color
+
+volumes:
+  # Persist downloaded Whisper models across runs (tiny ~75 MB up to
+  # large-v3 ~3 GB). The image pre-creates ~/.cache/huggingface owned by the
+  # whisper user, so a fresh volume is initialized writable. The fixed name
+  # shares the cache with the example compose files.
+  whisper-models:
+    name: whisper-models

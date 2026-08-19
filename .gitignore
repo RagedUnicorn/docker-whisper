@@ -5,6 +5,12 @@
 .DS_Store
 Thumbs.db
 
+# Media files (local working directory) — ignored
+media/*
+!media/input/
+media/input/*
+!media/input/jfk.wav
+
 # Temporary files
 *.tmp
 *.log
