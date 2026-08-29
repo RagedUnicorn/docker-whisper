@@ -1,6 +1,6 @@
 # docker-whisper
 
-![](./docs/docker_whisper.svg)
+![](./docs/docker_whisper_banner.svg)
 
 [![Release Build](https://github.com/RagedUnicorn/docker-whisper/actions/workflows/docker_release.yml/badge.svg)](https://github.com/RagedUnicorn/docker-whisper/actions/workflows/docker_release.yml)
 [![Test](https://github.com/RagedUnicorn/docker-whisper/actions/workflows/test.yml/badge.svg)](https://github.com/RagedUnicorn/docker-whisper/actions/workflows/test.yml)
