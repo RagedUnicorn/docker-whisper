@@ -1,5 +1,7 @@
 # Whisper Docker Image
 
+![Docker Whisper](https://raw.githubusercontent.com/RagedUnicorn/docker-whisper/master/docs/docker_whisper_banner.png)
+
 Whisper speech recognition with [whisper-ctranslate2](https://github.com/Softcatala/whisper-ctranslate2)
 (faster-whisper/CTranslate2) - transcribe and translate audio and video, on CPU or NVIDIA GPU.
 
