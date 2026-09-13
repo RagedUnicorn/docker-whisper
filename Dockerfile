@@ -8,7 +8,7 @@ ARG NVIDIA_CUBLAS_VERSION=12.9.2.10
 # renovate: datasource=pypi depName=nvidia-cudnn-cu12 versioning=pep440
 ARG NVIDIA_CUDNN_VERSION=9.26.0.51
 
-FROM python:3.12.14-slim AS base
+FROM python:3.14.7-slim AS base
 
 ARG WHISPER_CTRANSLATE2_VERSION
 
@@ -65,7 +65,7 @@ LABEL org.opencontainers.image.title="whisper-ctranslate2 with CUDA on Python sl
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.created="${BUILD_DATE}" \
-      org.opencontainers.image.base.name="docker.io/library/python:3.12.14-slim"
+      org.opencontainers.image.base.name="docker.io/library/python:3.14.7-slim"
 
 # GPU runtime libraries as pip wheels instead of an nvidia/cuda base image:
 # this is faster-whisper's documented mechanism and keeps both variants on
@@ -105,7 +105,7 @@ LABEL org.opencontainers.image.title="whisper-ctranslate2 on Python slim" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.created="${BUILD_DATE}" \
-      org.opencontainers.image.base.name="docker.io/library/python:3.12.14-slim"
+      org.opencontainers.image.base.name="docker.io/library/python:3.14.7-slim"
 
 USER whisper
 

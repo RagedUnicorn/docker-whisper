@@ -14,7 +14,7 @@ metadataTest:
     - key: 'org.opencontainers.image.licenses'
       value: 'MIT'
     - key: 'org.opencontainers.image.base.name'
-      value: 'docker.io/library/python:3.12.14-slim'
+      value: 'docker.io/library/python:3.14.7-slim'
 
   entrypoint: ['whisper-ctranslate2']
   cmd: ['--help']
