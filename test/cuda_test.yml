@@ -27,11 +27,11 @@ fileExistenceTests:
     isExecutableBy: 'any'
 
   - name: 'cuBLAS library directory exists'
-    path: '/usr/local/lib/python3.12/site-packages/nvidia/cublas/lib'
+    path: '/usr/local/lib/python3.14/site-packages/nvidia/cublas/lib'
     shouldExist: true
 
   - name: 'cuDNN library directory exists'
-    path: '/usr/local/lib/python3.12/site-packages/nvidia/cudnn/lib'
+    path: '/usr/local/lib/python3.14/site-packages/nvidia/cudnn/lib'
     shouldExist: true
 
 fileContentTests:
@@ -46,10 +46,10 @@ fileContentTests:
 commandTests:
   - name: 'cuBLAS shared library present (CUDA 12 ABI)'
     command: 'sh'
-    args: ['-c', 'ls /usr/local/lib/python3.12/site-packages/nvidia/cublas/lib/libcublas.so.12*']
+    args: ['-c', 'ls /usr/local/lib/python3.14/site-packages/nvidia/cublas/lib/libcublas.so.12*']
     exitCode: 0
 
   - name: 'cuDNN shared library present (cuDNN 9 ABI)'
     command: 'sh'
-    args: ['-c', 'ls /usr/local/lib/python3.12/site-packages/nvidia/cudnn/lib/libcudnn.so.9*']
+    args: ['-c', 'ls /usr/local/lib/python3.14/site-packages/nvidia/cudnn/lib/libcudnn.so.9*']
     exitCode: 0

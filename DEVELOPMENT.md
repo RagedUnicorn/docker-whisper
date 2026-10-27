@@ -161,11 +161,11 @@ The Python base version is referenced in several places that must stay aligned:
 All of these resolve to the same `python` dependency at the same version, so Renovate bumps them together in a single
 PR - the base image, the labels, and the metadata tests no longer drift apart.
 
-**Manual step on Python minor bumps (e.g. 3.12 → 3.13):** the NVIDIA wheels install their libraries under a
+**Manual step on Python minor bumps (e.g. 3.14 → 3.15):** the NVIDIA wheels install their libraries under a
 site-packages path keyed to the Python minor version. A minor bump must update, in the same change:
 
-1. The `LD_LIBRARY_PATH` in the Dockerfile's cuda stage (`python3.12` → `python3.13`)
-2. The `python3.12` site-packages paths asserted in `test/cpu_test.yml` (NVIDIA-absence check) and
+1. The `LD_LIBRARY_PATH` in the Dockerfile's cuda stage (`python3.14` → `python3.15`)
+2. The `python3.14` site-packages paths asserted in `test/cpu_test.yml` (NVIDIA-absence check) and
    `test/cuda_test.yml` (library directory and glob checks)
 
 This is why the Renovate config automerges only **patch** updates for the Python base - a minor-bump PR without the
@@ -243,7 +243,7 @@ docker run --rm -v whisper-models:/home/whisper/.cache/huggingface \
 ```bash
 # Check the NVIDIA wheel libraries are present (cuda variant)
 docker run --rm --entrypoint sh ragedunicorn/whisper:test-cuda -c \
-  "ls /usr/local/lib/python3.12/site-packages/nvidia/cublas/lib /usr/local/lib/python3.12/site-packages/nvidia/cudnn/lib"
+  "ls /usr/local/lib/python3.14/site-packages/nvidia/cublas/lib /usr/local/lib/python3.14/site-packages/nvidia/cudnn/lib"
 
 # Check the dynamic linker path
 docker run --rm --entrypoint sh ragedunicorn/whisper:test-cuda -c 'echo "$LD_LIBRARY_PATH"'
