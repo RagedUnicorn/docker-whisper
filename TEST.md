@@ -175,7 +175,7 @@ The NVIDIA wheels ship versioned shared libraries whose exact file names change 
 checks them with version-agnostic globs pinned only to the ABI major (`libcublas.so.12*`, `libcudnn.so.9*`). A failing
 glob after a Renovate update means the wheel moved to a new library major - which CTranslate2 may not link against.
 
-The site-packages directory in those paths is keyed to the Python minor version (`python3.12`). If the file structure
+The site-packages directory in those paths is keyed to the Python minor version (`python3.14`). If the file structure
 tests fail after a Python base bump, the test paths and the Dockerfile's `LD_LIBRARY_PATH` need the coordinated update
 described in [DEVELOPMENT.md](DEVELOPMENT.md).
 
@@ -183,7 +183,7 @@ To inspect the current libraries in the image:
 
 ```bash
 docker run --rm --entrypoint sh ragedunicorn/whisper:test-cuda -c \
-  "find /usr/local/lib/python3.12/site-packages/nvidia -name '*.so*' | sort"
+  "find /usr/local/lib/python3.14/site-packages/nvidia -name '*.so*' | sort"
 ```
 
 ### Metadata Test Failures

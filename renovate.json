@@ -27,7 +27,7 @@
       "pinDigests": false
     },
     {
-      "description": "Automatically merge patch updates for the Python base image. Minor bumps are deliberately excluded: the site-packages path embedded in the cuda stage's LD_LIBRARY_PATH and asserted in test/cpu_test.yml and test/cuda_test.yml is keyed to the Python minor version (python3.12) and needs a coordinated manual update",
+      "description": "Automatically merge patch updates for the Python base image. Minor bumps are deliberately excluded: the site-packages path embedded in the cuda stage's LD_LIBRARY_PATH and asserted in test/cpu_test.yml and test/cuda_test.yml is keyed to the Python minor version (python3.14) and needs a coordinated manual update",
       "matchDatasources": [
         "docker"
       ],

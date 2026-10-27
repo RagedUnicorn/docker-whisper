@@ -81,9 +81,9 @@ RUN pip install --no-cache-dir \
     nvidia-cudnn-cu12==${NVIDIA_CUDNN_VERSION}
 
 # The wheel library directories under site-packages are keyed to the Python
-# minor version: a python 3.12 -> 3.13 base bump must update this path (and
+# minor version: a python 3.14 -> 3.15 base bump must update this path (and
 # the paths asserted in test/cuda_test.yml and test/cpu_test.yml).
-ENV LD_LIBRARY_PATH=/usr/local/lib/python3.12/site-packages/nvidia/cublas/lib:/usr/local/lib/python3.12/site-packages/nvidia/cudnn/lib
+ENV LD_LIBRARY_PATH=/usr/local/lib/python3.14/site-packages/nvidia/cublas/lib:/usr/local/lib/python3.14/site-packages/nvidia/cudnn/lib
 
 USER whisper
 

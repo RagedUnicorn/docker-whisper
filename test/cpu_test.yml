@@ -28,7 +28,7 @@ fileExistenceTests:
 
   # The CPU image must not ship the NVIDIA GPU libraries (cuda variant only)
   - name: 'NVIDIA libraries absent'
-    path: '/usr/local/lib/python3.12/site-packages/nvidia'
+    path: '/usr/local/lib/python3.14/site-packages/nvidia'
     shouldExist: false
 
 fileContentTests:
