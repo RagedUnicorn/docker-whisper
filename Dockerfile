@@ -22,8 +22,12 @@ LABEL org.opencontainers.image.authors="Michael Wiesendanger <michael.wiesendang
 # glibc-only wheels. No ffmpeg is installed: audio and video containers are
 # decoded by PyAV, which bundles the FFmpeg libraries in its wheel. The
 # official python image ships no EXTERNALLY-MANAGED marker, so pip installs
-# system-wide without friction.
-RUN pip install --no-cache-dir whisper-ctranslate2==${WHISPER_CTRANSLATE2_VERSION}
+# system-wide without friction. PyAV is capped below 19: av 19 dropped the
+# metadata_errors keyword that faster-whisper 1.2.x passes to av.open(), which
+# breaks every transcription. Lift the cap once faster-whisper supports av 19.
+RUN pip install --no-cache-dir \
+    whisper-ctranslate2==${WHISPER_CTRANSLATE2_VERSION} \
+    "av<19"
 
 # Create non-root user for running whisper-ctranslate2. Debian trixie-slim
 # ships useradd (passwd package) but not the family's usual adduser, hence
