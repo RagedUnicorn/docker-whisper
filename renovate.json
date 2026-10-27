@@ -51,6 +51,16 @@
       "groupSlug": "python"
     },
     {
+      "description": "Hold the Python base below 3.15: faster-whisper depends on onnxruntime, which publishes no cp315 wheels yet (and no sdist), so a 3.15 image cannot be built. Lift once https://pypi.org/project/onnxruntime/#files lists a cp315 manylinux x86_64 wheel",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "python"
+      ],
+      "allowedVersions": "/^3\\.1[0-4]\\./"
+    },
+    {
       "description": "Group the NVIDIA CUDA runtime wheels into one PR: nvidia-cudnn-cu12 depends on nvidia-cublas-cu12, so the pins move together",
       "matchDatasources": [
         "pypi"
