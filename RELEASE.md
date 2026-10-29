@@ -41,7 +41,8 @@ When you push a tag, GitHub Actions automatically:
      CPU-only builds)
    - Pushes both variants to both GitHub Container Registry and Docker Hub
 
-2. **Creates GitHub Release** (`.github/workflows/github_release.yml`)
+2. **Creates GitHub Release** (`create-release` job in `.github/workflows/docker_release.yml`)
+   - Runs only after the images were tested and pushed successfully
    - Generates changelog from commit history
    - Adds Docker pull commands for both variants
    - Links to the release
