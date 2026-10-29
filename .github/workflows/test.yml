@@ -48,8 +48,8 @@ jobs:
         continue-on-error: true
         shell: bash
         env:
-          WHISPER_VERSION: test-cpu
-          WHISPER_CUDA_VERSION: test-cuda
+          WHISPER_TEST_VERSION: test-cpu
+          WHISPER_CUDA_TEST_VERSION: test-cuda
         run: |
           echo "::group::📁 File Structure Tests (${{ matrix.variant }})"
           docker compose -f docker-compose.test.yml up --exit-code-from container-test-${{ matrix.variant }} container-test-${{ matrix.variant }} 2>&1 | tee test-file-structure.log
@@ -59,8 +59,8 @@ jobs:
         continue-on-error: true
         shell: bash
         env:
-          WHISPER_VERSION: test-cpu
-          WHISPER_CUDA_VERSION: test-cuda
+          WHISPER_TEST_VERSION: test-cpu
+          WHISPER_CUDA_TEST_VERSION: test-cuda
         run: |
           echo "::group::🔧 Command Execution Tests (${{ matrix.variant }})"
           docker compose -f docker-compose.test.yml up --exit-code-from container-test-command-${{ matrix.variant }} container-test-command-${{ matrix.variant }} 2>&1 | tee test-command-execution.log
@@ -70,8 +70,8 @@ jobs:
         continue-on-error: true
         shell: bash
         env:
-          WHISPER_VERSION: test-cpu
-          WHISPER_CUDA_VERSION: test-cuda
+          WHISPER_TEST_VERSION: test-cpu
+          WHISPER_CUDA_TEST_VERSION: test-cuda
         run: |
           echo "::group::🏷️ Metadata Tests (${{ matrix.variant }})"
           docker compose -f docker-compose.test.yml up --exit-code-from container-test-metadata-${{ matrix.variant }} container-test-metadata-${{ matrix.variant }} 2>&1 | tee test-metadata.log

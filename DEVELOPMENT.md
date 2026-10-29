@@ -111,27 +111,27 @@ docker buildx build --load --provenance=false --target cuda -t ragedunicorn/whis
 
 ```bash
 # Run all tests against your local builds
-WHISPER_VERSION=test-cpu WHISPER_CUDA_VERSION=test-cuda docker compose -f docker-compose.test.yml run test-all
+WHISPER_TEST_VERSION=test-cpu WHISPER_CUDA_TEST_VERSION=test-cuda docker compose -f docker-compose.test.yml run test-all
 
 # Run specific tests during development
-WHISPER_VERSION=test-cpu docker compose -f docker-compose.test.yml up container-test-command-cpu
+WHISPER_TEST_VERSION=test-cpu docker compose -f docker-compose.test.yml up container-test-command-cpu
 ```
 
 **Windows Command Prompt:**
 
 ```cmd
 # Run all tests against your local builds
-set WHISPER_VERSION=test-cpu && set WHISPER_CUDA_VERSION=test-cuda && docker compose -f docker-compose.test.yml run test-all
+set WHISPER_TEST_VERSION=test-cpu && set WHISPER_CUDA_TEST_VERSION=test-cuda && docker compose -f docker-compose.test.yml run test-all
 ```
 
 **Windows PowerShell:**
 
 ```powershell
 # Run all tests against your local builds
-$env:WHISPER_VERSION="test-cpu"; $env:WHISPER_CUDA_VERSION="test-cuda"; docker compose -f docker-compose.test.yml run test-all
+$env:WHISPER_TEST_VERSION="test-cpu"; $env:WHISPER_CUDA_TEST_VERSION="test-cuda"; docker compose -f docker-compose.test.yml run test-all
 
 # Run specific tests during development
-$env:WHISPER_VERSION="test-cpu"; docker compose -f docker-compose.test.yml up container-test-command-cpu
+$env:WHISPER_TEST_VERSION="test-cpu"; docker compose -f docker-compose.test.yml up container-test-command-cpu
 ```
 
 **Important:** Never test against remote images - they may have different labels or configurations due to CI/CD overrides.

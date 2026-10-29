@@ -84,21 +84,21 @@ docker buildx build --load --provenance=false --target cuda -t ragedunicorn/whis
 
 ```bash
 # Run tests against your local builds
-WHISPER_VERSION=test-cpu WHISPER_CUDA_VERSION=test-cuda docker compose -f docker-compose.test.yml run test-all
+WHISPER_TEST_VERSION=test-cpu WHISPER_CUDA_TEST_VERSION=test-cuda docker compose -f docker-compose.test.yml run test-all
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
 # Run tests against your local builds
-$env:WHISPER_VERSION="test-cpu"; $env:WHISPER_CUDA_VERSION="test-cuda"; docker compose -f docker-compose.test.yml run test-all
+$env:WHISPER_TEST_VERSION="test-cpu"; $env:WHISPER_CUDA_TEST_VERSION="test-cuda"; docker compose -f docker-compose.test.yml run test-all
 ```
 
 **Windows (Command Prompt):**
 
 ```cmd
 # Run tests against your local builds
-set WHISPER_VERSION=test-cpu && set WHISPER_CUDA_VERSION=test-cuda && docker compose -f docker-compose.test.yml run test-all
+set WHISPER_TEST_VERSION=test-cpu && set WHISPER_CUDA_TEST_VERSION=test-cuda && docker compose -f docker-compose.test.yml run test-all
 ```
 
 **Why local testing is important:**
@@ -113,7 +113,7 @@ set WHISPER_VERSION=test-cpu && set WHISPER_CUDA_VERSION=test-cuda && docker com
 
 ```bash
 docker pull ragedunicorn/whisper:latest
-docker compose -f docker-compose.test.yml run test-all
+WHISPER_TEST_VERSION=latest docker compose -f docker-compose.test.yml run test-all-cpu
 ```
 
 **✅ DO THIS - test your local builds:**
@@ -123,7 +123,7 @@ Linux/macOS:
 ```bash
 docker buildx build --load --provenance=false --target cpu -t ragedunicorn/whisper:test-cpu .
 docker buildx build --load --provenance=false --target cuda -t ragedunicorn/whisper:test-cuda .
-WHISPER_VERSION=test-cpu WHISPER_CUDA_VERSION=test-cuda docker compose -f docker-compose.test.yml run test-all
+WHISPER_TEST_VERSION=test-cpu WHISPER_CUDA_TEST_VERSION=test-cuda docker compose -f docker-compose.test.yml run test-all
 ```
 
 Windows (PowerShell):
@@ -131,8 +131,20 @@ Windows (PowerShell):
 ```powershell
 docker buildx build --load --provenance=false --target cpu -t ragedunicorn/whisper:test-cpu .
 docker buildx build --load --provenance=false --target cuda -t ragedunicorn/whisper:test-cuda .
-$env:WHISPER_VERSION="test-cpu"; $env:WHISPER_CUDA_VERSION="test-cuda"; docker compose -f docker-compose.test.yml run test-all
+$env:WHISPER_TEST_VERSION="test-cpu"; $env:WHISPER_CUDA_TEST_VERSION="test-cuda"; docker compose -f docker-compose.test.yml run test-all
 ```
+
+### Why `WHISPER_TEST_VERSION` and not `WHISPER_VERSION`
+
+`docker-compose.test.yml` reads its own variables, `WHISPER_TEST_VERSION` and `WHISPER_CUDA_TEST_VERSION`, which default
+to `test-cpu` and `test-cuda`. The runtime compose file and the examples read `WHISPER_VERSION` and
+`WHISPER_CUDA_VERSION`, which `.env` pins to `latest` and `latest-cuda`.
+
+Keeping them separate matters. If both files read the same variables, the `latest` values in `.env` silently win over
+the `:-test-cpu` / `:-test-cuda` fallbacks in the test compose file, and a bare
+`docker compose -f docker-compose.test.yml run test-all` quietly validates the **published** images instead of the ones
+you just built - exactly the failure mode this document warns about. With separate variables, the bare command always
+tests the local builds.
 
 ### Functional Transcription Test
 
@@ -192,7 +204,7 @@ docker run --rm --entrypoint sh ragedunicorn/whisper:test-cuda -c \
 
 1. **Testing remote images instead of local builds**
    - Remote images (Docker Hub, GHCR) have labels overridden by CI/CD
-   - Always test your local builds with `WHISPER_VERSION=test-cpu` / `WHISPER_CUDA_VERSION=test-cuda`
+   - Always test your local builds with `WHISPER_TEST_VERSION=test-cpu` / `WHISPER_CUDA_TEST_VERSION=test-cuda`
 
 2. **Label value mismatches**
    - CI/CD systems may capitalize values (e.g., "RagedUnicorn" vs "ragedunicorn")
@@ -266,8 +278,8 @@ Manual integration example:
 ```yaml
 - name: Run Container Structure Tests
   env:
-    WHISPER_VERSION: test-cpu
-    WHISPER_CUDA_VERSION: test-cuda
+    WHISPER_TEST_VERSION: test-cpu
+    WHISPER_CUDA_TEST_VERSION: test-cuda
   run: docker compose -f docker-compose.test.yml run test-all
 ```
 
