@@ -5,11 +5,11 @@
         <option name="envVars">
           <list>
             <DockerEnvVarImpl>
-              <option name="name" value="WHISPER_VERSION" />
+              <option name="name" value="WHISPER_TEST_VERSION" />
               <option name="value" value="test-cpu" />
             </DockerEnvVarImpl>
             <DockerEnvVarImpl>
-              <option name="name" value="WHISPER_CUDA_VERSION" />
+              <option name="name" value="WHISPER_CUDA_TEST_VERSION" />
               <option name="value" value="test-cuda" />
             </DockerEnvVarImpl>
           </list>
