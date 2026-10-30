@@ -21,8 +21,9 @@ jobs:
           # The Dockerfile is the single, Renovate-managed source of the
           # whisper-ctranslate2 and Python base versions. Concrete versions in the
           # docs drift, so use placeholders (<whisper-version>) or the symbolic
-          # X.Y.Z-cpu-N / X.Y.Z-cuda-N form
-          pattern='[0-9]+(\.[0-9]+)*-alpine[0-9]|alpine:[0-9]|--build-arg [A-Z_]*VERSION=[0-9]|ragedunicorn/[a-z0-9-]+:[0-9]'
+          # X.Y.Z-cpu-N / X.Y.Z-cuda-N form. The last two alternatives match the
+          # -cpu/-cuda image tags and the vX.Y.Z-N git tags
+          pattern='[0-9]+(\.[0-9]+)*-alpine[0-9]|alpine:[0-9]|--build-arg [A-Z_]*VERSION=[0-9]|ragedunicorn/[a-z0-9-]+:[0-9]|[0-9]+\.[0-9]+\.[0-9]+-(cpu|cuda)|v[0-9]+\.[0-9]+\.[0-9]+-[0-9]'
           hits=$(git ls-files -z -- '*.md' | xargs -0 grep -HnE "$pattern" || true)
           if [ -n "$hits" ]; then
             while IFS=: read -r file line text; do
