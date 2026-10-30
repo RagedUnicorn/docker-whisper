@@ -81,12 +81,16 @@ The development mode:
 docker buildx build --load --provenance=false --target cpu -t ragedunicorn/whisper:test-cpu .
 docker buildx build --load --provenance=false --target cuda -t ragedunicorn/whisper:test-cuda .
 
-# Build with specific versions
+# Build with version metadata (whisper-ctranslate2 and the Python base come from the Dockerfile)
 docker buildx build --load --provenance=false --target cpu \
-  --build-arg WHISPER_CTRANSLATE2_VERSION=0.5.7 \
   --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
-  --build-arg VERSION=0.5.7-cpu-1 \
-  -t ragedunicorn/whisper:0.5.7-cpu-1 .
+  --build-arg VERSION=dev \
+  -t ragedunicorn/whisper:dev .
+
+# Build a different whisper-ctranslate2 version than the Dockerfile default
+docker buildx build --load --provenance=false --target cpu \
+  --build-arg WHISPER_CTRANSLATE2_VERSION=<whisper-version> \
+  -t ragedunicorn/whisper:dev .
 
 # Multi-platform build (cpu only - the cuda variant is amd64-only)
 docker buildx build \

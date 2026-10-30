@@ -85,7 +85,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       # docker/metadata-action cannot interleave the variant into the middle
-      # of the tag (0.5.7-cpu-1) and its generated labels would override the
+      # of the tag (X.Y.Z-cpu-N) and its generated labels would override the
       # per-variant title/description baked into the Dockerfile stages, so
       # the tags are computed directly instead.
       - name: Compute release metadata
@@ -159,7 +159,7 @@ jobs:
             COMMITS=$(git log ${{ steps.prev_tag.outputs.previous_tag }}..${{ github.ref_name }} --pretty=format:"- %s (%h)" --reverse)
           fi
           # Compute the per-variant Docker tags from the git tag
-          # (v0.5.7-1 -> version 0.5.7, build 1)
+          # (vX.Y.Z-N -> version X.Y.Z, build N)
           RAW="${GITHUB_REF_NAME#v}"
           WHISPER_VERSION="${RAW%-*}"
           BUILD="${RAW##*-}"

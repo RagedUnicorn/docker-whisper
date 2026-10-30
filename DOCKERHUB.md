@@ -11,9 +11,9 @@ Whisper speech recognition with [whisper-ctranslate2](https://github.com/Softcat
 # Pull latest version (cpu variant)
 docker pull ragedunicorn/whisper:latest
 
-# Or the CUDA variant / a specific version
+# Or the CUDA variant / a specific version (see the Tags tab for the available versions)
 docker pull ragedunicorn/whisper:latest-cuda
-docker pull ragedunicorn/whisper:0.5.7-cpu-1
+docker pull ragedunicorn/whisper:<whisper-version>-cpu-<build>
 
 # Transcribe a file (model is cached in a named volume)
 docker run --rm -v $(pwd):/tmp/workdir -v whisper-models:/home/whisper/.cache/huggingface \
@@ -71,9 +71,12 @@ This image uses semantic versioning with a variant infix:
 
 - `latest` - Most recent stable release (cpu variant)
 - `latest-cuda` - Most recent stable release (cuda variant)
-- `0.5.7-cpu-1` - whisper-ctranslate2 0.5.7, CPU variant, build 1
-- `0.5.7-cuda-1` - whisper-ctranslate2 0.5.7, CUDA variant, build 1
-- `0.5.7-cpu-2` - Rebuild of the same version (base image bump, fixes)
+- `X.Y.Z-cpu-1` - whisper-ctranslate2 X.Y.Z, CPU variant, build 1
+- `X.Y.Z-cuda-1` - whisper-ctranslate2 X.Y.Z, CUDA variant, build 1
+- `X.Y.Z-cpu-2` - Rebuild of the same version (base image bump, fixes)
+
+`X.Y.Z` is the whisper-ctranslate2 version. The available versions are listed in the
+[Tags tab](https://hub.docker.com/r/ragedunicorn/whisper/tags).
 
 When updates are available through automated dependency management, new releases are created with appropriate version tags.
 

@@ -90,8 +90,11 @@ docker run --rm -v $(pwd):/tmp/workdir -v whisper-models:/home/whisper/.cache/hu
 
 # Using exact version
 docker run --rm -v $(pwd):/tmp/workdir -v whisper-models:/home/whisper/.cache/huggingface \
-  ragedunicorn/whisper:0.5.7-cpu-1 [whisper-options]
+  ragedunicorn/whisper:<whisper-version>-cpu-<build> [whisper-options]
 ```
+
+Available tags are listed on [Docker Hub](https://hub.docker.com/r/ragedunicorn/whisper/tags) and in the
+[GitHub releases](https://github.com/RagedUnicorn/docker-whisper/releases).
 
 **Windows (PowerShell):**
 
@@ -248,8 +251,8 @@ See [examples/README.md](examples/README.md) for the full list of example servic
    preferred versions:
 
    ```env
-   WHISPER_VERSION=0.5.7-cpu-1
-   WHISPER_CUDA_VERSION=0.5.7-cuda-1
+   WHISPER_VERSION=<whisper-version>-cpu-<build>
+   WHISPER_CUDA_VERSION=<whisper-version>-cuda-<build>
    ```
 
 ## Versioning
@@ -258,11 +261,13 @@ This project uses semantic versioning that matches the Docker image contents:
 
 **Format:** `{whisper_ctranslate2_version}-{cpu|cuda}-{build_number}`
 
-Examples:
-- `0.5.7-cpu-1` - whisper-ctranslate2 0.5.7, CPU variant, build 1
-- `0.5.7-cuda-1` - whisper-ctranslate2 0.5.7, CUDA variant, build 1
+Examples (`X.Y.Z` is the whisper-ctranslate2 version):
+- `X.Y.Z-cpu-1` - whisper-ctranslate2 X.Y.Z, CPU variant, build 1
+- `X.Y.Z-cuda-1` - whisper-ctranslate2 X.Y.Z, CUDA variant, build 1
 - `latest` - Most recent stable release (cpu)
 - `latest-cuda` - Most recent stable release (cuda)
+
+The current tags are listed on [Docker Hub](https://hub.docker.com/r/ragedunicorn/whisper/tags).
 
 A single git tag (`v{whisper_ctranslate2_version}-{build_number}`) produces both variant images. Unlike the Alpine
 siblings there is no base-OS segment in the tag - Python base bumps only increment the build number.

@@ -6,8 +6,10 @@ This document describes how to create a new release for the docker-whisper proje
 
 ```bash
 # Tag format: v{whisper_ctranslate2_version}-{build_number}
-git tag -a v0.5.7-1 -m "v0.5.7-1"
-git push origin v0.5.7-1
+# Take the version from the Dockerfile (WHISPER_CTRANSLATE2_VERSION)
+TAG=v<whisper-version>-<build>
+git tag -a "$TAG" -m "$TAG"
+git push origin "$TAG"
 ```
 
 This automatically triggers the release process via GitHub Actions. A single git tag produces **both** variant images.
@@ -21,15 +23,15 @@ See [README.md](README.md#versioning) for the complete versioning documentation.
 Unlike the Alpine-based siblings there is no base-OS segment in the tag - the Python base is an implementation detail,
 and base bumps only increment the build number.
 
-Examples:
-- `v0.5.7-1` - Initial release
-- `v0.5.7-2` - Rebuild with the same whisper-ctranslate2 version (Python base bump, NVIDIA wheel bump, fixes)
-- `v0.5.8-1` - whisper-ctranslate2 update (build resets to 1)
+Examples (`X.Y.Z` is the whisper-ctranslate2 version):
+- `vX.Y.Z-1` - First build of whisper-ctranslate2 X.Y.Z
+- `vX.Y.Z-2` - Rebuild with the same whisper-ctranslate2 version (Python base bump, NVIDIA wheel bump, fixes)
+- `vX.Y+1.0-1` - whisper-ctranslate2 update (build resets to 1)
 
-Docker tags produced by `v0.5.7-1`:
+Docker tags produced by `vX.Y.Z-N`:
 
-- `0.5.7-cpu-1` and `latest` (cpu variant)
-- `0.5.7-cuda-1` and `latest-cuda` (cuda variant)
+- `X.Y.Z-cpu-N` and `latest` (cpu variant)
+- `X.Y.Z-cuda-N` and `latest-cuda` (cuda variant)
 
 ## Release Workflow
 
@@ -66,15 +68,17 @@ Create a new release when:
 
 ### Update Docker Hub Documentation
 
-After creating a release, manually update the Docker Hub repository description:
+`DOCKERHUB.md` is the source of truth for the Docker Hub repository description. It deliberately contains no
+concrete versions (readers find those in the Tags tab), so a release alone does not require a description update.
+Only when `DOCKERHUB.md` changed since the last sync:
 
 1. Go to [Docker Hub](https://hub.docker.com/r/ragedunicorn/whisper)
 2. Click "Manage Repository" → "Description"
 3. Copy the contents of `DOCKERHUB.md`
-4. Update any version numbers in the examples to match the latest release
-5. Save the changes
+4. Save the changes
 
-**Note**: The `DOCKERHUB.md` file is maintained in the repository as the source of truth for Docker Hub documentation.
+**Note**: the sync stays manual on purpose. Docker Hub only offers an undocumented endpoint for description updates,
+and it needs a separate Read/Write/Delete access token.
 
 ## Best Practices
 
@@ -110,7 +114,7 @@ Before creating a release:
 
 ### Release didn't trigger
 
-- Ensure tag starts with `v` and follows the format (e.g., `v0.5.7-1`) - the release workflow rejects tags that do
+- Ensure tag starts with `v` and follows the format (e.g., `vX.Y.Z-N`) - the release workflow rejects tags that do
   not match `v{version}-{build}`
 - Check GitHub Actions tab for workflow runs
 - Verify you have push permissions
@@ -150,12 +154,12 @@ If automation fails, you can create a release manually:
 
 1. Go to repository's "Releases" page
 2. Click "Create a new release"
-3. Choose your tag (must follow format: `v0.5.7-1`)
+3. Choose your tag (must follow format: `vX.Y.Z-N`)
 4. Add release notes
-5. Include Docker pull commands:
+5. Include Docker pull commands (for tag `vX.Y.Z-N`):
    ```
-   docker pull ghcr.io/ragedunicorn/docker-whisper:0.5.7-cpu-1
-   docker pull ghcr.io/ragedunicorn/docker-whisper:0.5.7-cuda-1
-   docker pull ragedunicorn/whisper:0.5.7-cpu-1
-   docker pull ragedunicorn/whisper:0.5.7-cuda-1
+   docker pull ghcr.io/ragedunicorn/docker-whisper:X.Y.Z-cpu-N
+   docker pull ghcr.io/ragedunicorn/docker-whisper:X.Y.Z-cuda-N
+   docker pull ragedunicorn/whisper:X.Y.Z-cpu-N
+   docker pull ragedunicorn/whisper:X.Y.Z-cuda-N
    ```
