@@ -41,7 +41,11 @@ When you push a tag, GitHub Actions automatically:
    - Re-runs the Container Structure Tests for both variants as a gate
    - cpu variant: linux/amd64 and linux/arm64; cuda variant: linux/amd64 only (the aarch64 CTranslate2 wheels are
      CPU-only builds)
+   - Smoke-tests the cpu linux/arm64 image under QEMU (interpreter architecture, native CTranslate2/faster-whisper
+     imports, `--help`)
    - Pushes both variants to both GitHub Container Registry and Docker Hub
+   - Attaches SBOM and provenance (`mode=max`) attestations to both variants
+   - Signs each pushed digest in both registries with cosign keyless signing (GitHub OIDC)
 
 2. **Creates GitHub Release** (`create-release` job in `.github/workflows/docker_release.yml`)
    - Runs only after the images were tested and pushed successfully

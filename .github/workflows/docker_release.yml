@@ -95,6 +95,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      # Required for cosign keyless signing (GitHub OIDC token for Fulcio)
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -157,7 +159,10 @@ jobs:
             echo "${GHCR_IMAGE}:${LATEST}"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v4.1.2
       - name: Build and push Docker image (${{ matrix.variant }})
+        id: build
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -170,6 +175,21 @@ jobs:
           build-args: |
             BUILD_DATE=${{ steps.rel.outputs.build_date }}
             VERSION=${{ steps.rel.outputs.version }}
+          sbom: true
+          provenance: mode=max
+      - name: Sign images with cosign (${{ matrix.variant }})
+        env:
+          TAGS: ${{ steps.rel.outputs.tags }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          # Sign the pushed manifest list by digest once per registry repository.
+          # Repository names are taken from the computed tags; the GHCR path is
+          # already lowercased (GHCR rejects the mixed-case github.repository)
+          for IMAGE in $(echo "$TAGS" | sed 's/:[^:/]*$//' | sort -u); do
+            echo "::group::Signing ${IMAGE}@${DIGEST}"
+            cosign sign --yes "${IMAGE}@${DIGEST}"
+            echo "::endgroup::"
+          done
 
   create-release:
     needs: build-and-push
