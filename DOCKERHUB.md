@@ -20,6 +20,17 @@ docker run --rm -v $(pwd):/tmp/workdir -v whisper-models:/home/whisper/.cache/hu
   ragedunicorn/whisper:latest video.mp4 --model medium --compute_type int8 --output_dir .
 ```
 
+On Windows, use the PowerShell form - `${PWD}` **with braces** and the colon
+inside the quotes (without braces PowerShell parses `$PWD:` as a
+scope-qualified variable, as in `$env:PATH`, and rejects the argument), and a
+backtick instead of a backslash to continue the line:
+
+```powershell
+# Transcribe a file (model is cached in a named volume)
+docker run --rm -v "${PWD}:/tmp/workdir" -v whisper-models:/home/whisper/.cache/huggingface `
+  ragedunicorn/whisper:latest video.mp4 --model medium --compute_type int8 --output_dir .
+```
+
 ## Features
 
 - 🚀 **Fast**: faster-whisper/CTranslate2 transcribes up to 4x faster than openai/whisper at the same accuracy
@@ -38,10 +49,24 @@ docker run --rm -v $(pwd):/tmp/workdir -v whisper-models:/home/whisper/.cache/hu
   ragedunicorn/whisper:latest video.mp4 --model medium --compute_type int8 --output_dir .
 ```
 
+PowerShell:
+
+```powershell
+docker run --rm -v "${PWD}:/tmp/workdir" -v whisper-models:/home/whisper/.cache/huggingface `
+  ragedunicorn/whisper:latest video.mp4 --model medium --compute_type int8 --output_dir .
+```
+
 ### Generate SRT subtitles
 
 ```bash
 docker run --rm -v $(pwd):/tmp/workdir -v whisper-models:/home/whisper/.cache/huggingface \
+  ragedunicorn/whisper:latest video.mp4 --model small --output_format srt --output_dir .
+```
+
+PowerShell:
+
+```powershell
+docker run --rm -v "${PWD}:/tmp/workdir" -v whisper-models:/home/whisper/.cache/huggingface `
   ragedunicorn/whisper:latest video.mp4 --model small --output_format srt --output_dir .
 ```
 
@@ -52,10 +77,24 @@ docker run --rm -v $(pwd):/tmp/workdir -v whisper-models:/home/whisper/.cache/hu
   ragedunicorn/whisper:latest interview.wav --task translate --model small --output_dir .
 ```
 
+PowerShell:
+
+```powershell
+docker run --rm -v "${PWD}:/tmp/workdir" -v whisper-models:/home/whisper/.cache/huggingface `
+  ragedunicorn/whisper:latest interview.wav --task translate --model small --output_dir .
+```
+
 ### GPU transcription (NVIDIA, CUDA 12 driver required)
 
 ```bash
 docker run --rm --gpus all -v $(pwd):/tmp/workdir -v whisper-models:/home/whisper/.cache/huggingface \
+  ragedunicorn/whisper:latest-cuda video.mp4 --model large-v3 --device cuda --output_dir .
+```
+
+PowerShell:
+
+```powershell
+docker run --rm --gpus all -v "${PWD}:/tmp/workdir" -v whisper-models:/home/whisper/.cache/huggingface `
   ragedunicorn/whisper:latest-cuda video.mp4 --model large-v3 --device cuda --output_dir .
 ```
 

@@ -72,6 +72,23 @@ docker run --rm --gpus all -v $(pwd):/tmp/workdir -v whisper-models:/home/whispe
   ragedunicorn/whisper:latest-cuda video.mp4 --model large-v3 --device cuda --output_dir .
 ```
 
+On Windows, use the PowerShell form (a backtick continues the line):
+
+```powershell
+# Transcribe a file from the current directory
+docker run --rm -v "${PWD}:/tmp/workdir" -v whisper-models:/home/whisper/.cache/huggingface `
+  ragedunicorn/whisper:latest video.mp4 --model medium --compute_type int8 --output_dir .
+
+# With an NVIDIA GPU
+docker run --rm --gpus all -v "${PWD}:/tmp/workdir" -v whisper-models:/home/whisper/.cache/huggingface `
+  ragedunicorn/whisper:latest-cuda video.mp4 --model large-v3 --device cuda --output_dir .
+```
+
+Write `${PWD}` **with braces** and keep the colon inside the quotes - without
+braces PowerShell parses `$PWD:` as a scope-qualified variable (as in
+`$env:PATH`) and rejects the argument. See the
+[Windows (PowerShell) notes](#windows-powershell-notes) for details.
+
 For development and building from source, see [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Usage
@@ -100,11 +117,15 @@ Available tags are listed on [Docker Hub](https://hub.docker.com/r/ragedunicorn/
 
 ```powershell
 # Using latest version (cpu)
-docker run --rm -v ${PWD}:/tmp/workdir -v whisper-models:/home/whisper/.cache/huggingface `
+docker run --rm -v "${PWD}:/tmp/workdir" -v whisper-models:/home/whisper/.cache/huggingface `
   ragedunicorn/whisper:latest [whisper-options]
 
+# Using exact version
+docker run --rm -v "${PWD}:/tmp/workdir" -v whisper-models:/home/whisper/.cache/huggingface `
+  ragedunicorn/whisper:<whisper-version>-cpu-<build> [whisper-options]
+
 # Using the CUDA variant
-docker run --rm --gpus all -v ${PWD}:/tmp/workdir -v whisper-models:/home/whisper/.cache/huggingface `
+docker run --rm --gpus all -v "${PWD}:/tmp/workdir" -v whisper-models:/home/whisper/.cache/huggingface `
   ragedunicorn/whisper:latest-cuda [whisper-options] --device cuda
 ```
 
@@ -112,7 +133,8 @@ docker run --rm --gpus all -v ${PWD}:/tmp/workdir -v whisper-models:/home/whispe
 
 The volume mounts are omitted below for brevity - add
 `-v $(pwd):/tmp/workdir -v whisper-models:/home/whisper/.cache/huggingface` (and `--gpus all` for the cuda variant)
-as shown above.
+as shown above. In PowerShell, write the workspace mount as `-v "${PWD}:/tmp/workdir"` instead; the whisper options
+after the image name are the same in both shells.
 
 #### Transcribe a Video File
 
@@ -175,6 +197,31 @@ docker run --rm -v whisper-models:/home/whisper/.cache/huggingface ...
 
 The image pre-creates the cache directory owned by the `whisper` user, so a fresh named volume is initialized
 writable. After the first download the image works fully offline for that model.
+
+### Windows (PowerShell) notes
+
+The PowerShell variants differ from the bash ones only in the workspace mount, which is written
+`-v "${PWD}:/tmp/workdir"` instead of `-v $(pwd):/tmp/workdir`, and in the line continuation (a backtick instead of a
+backslash). The mount spelling matters:
+
+- Pasting the bash form into PowerShell breaks: PowerShell ends the argument after the `$(pwd)` subexpression, so
+  `$(pwd):/tmp/workdir` reaches Docker as two arguments (`C:\path` and `:/tmp/workdir`).
+- `"$PWD:/tmp/workdir"` without braces is a parse error: PowerShell reads a colon after a variable as a scope
+  qualifier (as in `$env:PATH`), and `/` is not a valid variable-name character.
+- `"${PWD}:/tmp/workdir"` works: the braces end the variable name at `PWD`, the colon stays literal, and Docker splits
+  the resulting `C:\path:/tmp/workdir` on the second colon because it recognises the `C:` drive prefix.
+
+The named model volume (`-v whisper-models:/home/whisper/.cache/huggingface`) contains no variable and is written the
+same way in both shells.
+
+To check what the container actually sees in the working directory, run a look-inside command:
+
+```powershell
+docker run --rm -v "${PWD}:/tmp/workdir" --entrypoint sh ragedunicorn/whisper:latest -c 'pwd; ls -la /tmp/workdir'
+```
+
+The single quotes keep `pwd; ls -la /tmp/workdir` as one literal argument to the container's `sh`, so the `;` runs
+inside the container - unquoted, PowerShell would treat `;` as its own statement separator and run `ls` on the host.
 
 ## Docker Compose Usage
 
