@@ -1,31 +1,9 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "ignorePaths intentionally overrides the :ignoreModulesAndTests preset from config:recommended: test/ must stay visible so the metadata-test custom manager can update test/cpu_metadata_test.yml and test/cuda_metadata_test.yml",
   "extends": [
-    "config:recommended"
-  ],
-  "schedule": [
-    "on monday"
-  ],
-  "timezone": "UTC",
-  "labels": [
-    "dependencies",
-    "renovate"
-  ],
-  "ignorePaths": [
-    "docker-compose.yml",
-    "docker-compose.dev.yml",
-    "docker-compose.test.yml",
-    "examples/**"
+    "github>RagedUnicorn/renovate-config"
   ],
   "packageRules": [
-    {
-      "matchCategories": [
-        "docker"
-      ],
-      "enabled": true,
-      "pinDigests": false
-    },
     {
       "description": "Automatically merge patch updates for the Python base image. Minor bumps are deliberately excluded: the site-packages path embedded in the cuda stage's LD_LIBRARY_PATH and asserted in test/cpu_test.yml and test/cuda_test.yml is keyed to the Python minor version (python3.14) and needs a coordinated manual update",
       "matchDatasources": [
@@ -85,28 +63,6 @@
     }
   ],
   "customManagers": [
-    {
-      "customType": "regex",
-      "description": "Update versions pinned via renovate comments before ARG lines in the Dockerfile",
-      "managerFilePatterns": [
-        "/^Dockerfile$/"
-      ],
-      "matchStrings": [
-        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)(?: versioning=(?<versioning>.*?))?\\s+ARG .*?=(?<currentValue>.*)"
-      ],
-      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
-    },
-    {
-      "customType": "regex",
-      "description": "Keep the container-structure-test harness pin in .env up to date",
-      "managerFilePatterns": [
-        "/^\\.env$/"
-      ],
-      "matchStrings": [
-        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s+CONTAINER_STRUCTURE_TEST_VERSION=(?<currentValue>.*)"
-      ],
-      "versioningTemplate": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-alpine[\\d.]+-(?<build>\\d+)$"
-    },
     {
       "customType": "regex",
       "description": "Keep the Python base.name OCI labels in the Dockerfile in sync with the FROM version",
