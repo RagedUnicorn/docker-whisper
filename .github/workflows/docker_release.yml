@@ -48,6 +48,45 @@ jobs:
           echo "::endgroup::"
 
           echo "::notice title=✅ Tests Passed::All Container Structure Tests completed successfully!"
+      # Only the cpu variant is published for linux/arm64 (the CTranslate2
+      # aarch64 wheels are CPU-only), so only the cpu leg smoke-tests arm64
+      - name: Set up QEMU
+        if: matrix.variant == 'cpu'
+        uses: docker/setup-qemu-action@v4
+      - name: Build arm64 test image (cpu)
+        if: matrix.variant == 'cpu'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: cpu
+          load: true
+          provenance: false
+          platforms: linux/arm64
+          tags: ragedunicorn/whisper:test-cpu-arm64
+          cache-from: type=gha,scope=cpu-arm64
+          cache-to: type=gha,mode=max,scope=cpu-arm64
+      - name: Smoke test arm64 image (cpu)
+        if: matrix.variant == 'cpu'
+        shell: bash
+        env:
+          IMAGE: ragedunicorn/whisper:test-cpu-arm64
+        run: |
+          # An amd64 Python in the arm64 image would still run natively on the
+          # amd64 runner, so assert the interpreter reports aarch64 and that
+          # the native CTranslate2 and faster-whisper libraries import
+          echo "::group::Checking interpreter architecture and native libraries under QEMU"
+          ARCH=$(docker run --rm --platform linux/arm64 --entrypoint python "$IMAGE" \
+            -c "import platform, ctranslate2, faster_whisper; print(platform.machine())")
+          echo "platform.machine() = $ARCH"
+          if [ "$ARCH" != "aarch64" ]; then
+            echo "::error title=❌ Wrong Architecture::the cpu arm64 image runs a non-aarch64 Python ($ARCH)"
+            exit 1
+          fi
+          echo "::endgroup::"
+
+          echo "::group::Running whisper-ctranslate2 --help on arm64"
+          docker run --rm --platform linux/arm64 "$IMAGE" --help > /dev/null
+          echo "::endgroup::"
 
   build-and-push:
     needs: test
