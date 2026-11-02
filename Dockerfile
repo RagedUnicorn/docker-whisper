@@ -4,7 +4,7 @@
 # renovate: datasource=pypi depName=whisper-ctranslate2
 ARG WHISPER_CTRANSLATE2_VERSION=0.5.8
 # renovate: datasource=pypi depName=nvidia-cublas-cu12 versioning=pep440
-ARG NVIDIA_CUBLAS_VERSION=12.9.2.10
+ARG NVIDIA_CUBLAS_VERSION=12.9.3.13
 # renovate: datasource=pypi depName=nvidia-cudnn-cu12 versioning=pep440
 ARG NVIDIA_CUDNN_VERSION=9.27.0.42
 
